@@ -108,11 +108,10 @@
 
 .element {
   inset: 1em 2em 3em 0;
-  /* top right bottom left */
+
   inset: 10% 5% -10%;
-  /* top left/right bottom */
+
   inset: 0 10px;
-  /* top/bottom left/right */
+
   inset: 20px;
-  /* all edges = 20px */
 }
