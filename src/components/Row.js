@@ -1,26 +1,35 @@
 import axios from '../api/axios';
 import React, { useCallback, useEffect, useState } from 'react';
+import './Row.css';
 
 const Row = ({ title, id, fetchUrl }) => {
   const [movies, setMovies] = useState([]);
 
   const fetchMovieData = useCallback(async () => {
     const response = await axios.get(fetchUrl);
-    console.log('response', response);
+    // console.log('response', response);
     setMovies(response.data.results);
   }, [fetchUrl]);
 
   useEffect(() => {
     fetchMovieData();
   }, [fetchMovieData]);
+
   return (
     <div>
       <h2>{title}</h2>
       <div className='slider'>
         <div className='slider__arrow-left'>
-          <span className='arrow'>{'<'}</span>
+          <span
+            className='arrow'
+            onClick={() => {
+              document.getElementById(id).scrollLeft -= window.innerWidth - 80;
+            }}
+          >
+            {'<'}
+          </span>
         </div>
-        <div id='id' className='row__posters'>
+        <div id={id} className='row__posters'>
           {movies.map((movie) => (
             <img
               key={movie.id}
@@ -31,7 +40,14 @@ const Row = ({ title, id, fetchUrl }) => {
           ))}
         </div>
         <div className='slider__arrow-right'>
-          <span className='arrow'>{'>'}</span>
+          <span
+            className='arrow'
+            onClick={() => {
+              document.getElementById(id).scrollLeft += window.innerWidth - 80;
+            }}
+          >
+            {'>'}
+          </span>
         </div>
       </div>
     </div>
