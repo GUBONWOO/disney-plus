@@ -1,20 +1,26 @@
-import {
-  GoogleAuthProvider,
-  getAuth,
-  onAuthStateChanged,
-  signInWithPopup,
-} from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut,
+} from 'firebase/auth';
 
 const Nav = () => {
+  const initialUserData = localStorage.getItem('userData')
+    ? JSON.parse(localStorage.getItem('userData'))
+    : {};
+
   const [show, setShow] = useState(false);
   const { pathname } = useLocation();
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
+  const [userData, setUserData] = useState(initialUserData);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -26,7 +32,7 @@ const Nav = () => {
         navigate('/');
       }
     });
-  }, []);
+  }, [auth, navigate, pathname]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
@@ -34,6 +40,8 @@ const Nav = () => {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // console.log('useLocation.search', useLocation().search);
 
   const handleScroll = () => {
     if (window.scrollY > 50) {
@@ -50,7 +58,21 @@ const Nav = () => {
 
   const handleAuth = () => {
     signInWithPopup(auth, provider)
-      .then((result) => {})
+      .then((result) => {
+        setUserData(result.user);
+        localStorage.setItem('userData', JSON.stringify(result.user));
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const handleSignOut = () => {
+    signOut(auth)
+      .then(() => {
+        setUserData({});
+        navigate(`/`);
+      })
       .catch((error) => {
         console.log(error);
       });
@@ -62,27 +84,73 @@ const Nav = () => {
         <img
           alt='Disney Plus Logo'
           src='/images/logo.svg'
-          onClick={() => {
-            window.location.href = '/';
-          }}
+          onClick={() => (window.location.href = '/')}
         />
       </Logo>
+
       {pathname === '/' ? (
-        <Login onClick={handleAuth}>login</Login>
+        <Login onClick={handleAuth}>Login</Login>
       ) : (
-        <Input
-          value={searchValue}
-          onChange={handleChange}
-          className='nav__input'
-          type='text'
-          placeholder='plz search'
-        />
+        <>
+          <Input
+            value={searchValue}
+            onChange={handleChange}
+            className='nav__input'
+            type='text'
+            placeholder='검색해주세요.'
+          />
+
+          <SignOut>
+            <UserImg src={userData.photoURL} alt={userData.displayName} />
+            <DropDown>
+              <span onClick={handleSignOut}>Sign Out</span>
+            </DropDown>
+          </SignOut>
+        </>
       )}
     </NavWrapper>
   );
 };
 
 export default Nav;
+
+const DropDown = styled.div`
+  position: absolute;
+  top: 48px;
+  right: 0px;
+  background: rgb(19, 19, 19)
+  border: 1px solid rgba(151, 151, 151, 0.34);
+  border-radius:  4px;
+  box-shadow: rgb(0 0 0 /50%) 0px 0px 18px 0px;
+  padding: 10px;
+  font-size: 14px;
+  letter-spacing: 3px;
+  width: 100%;
+  opacity: 0;
+`;
+
+const SignOut = styled.div`
+  position: relative;
+  height: 48px;
+  width: 48px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    ${DropDown} {
+      opacity: 1;
+      transition-duration: 1s;
+    }
+  }
+`;
+
+const UserImg = styled.img`
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+`;
 
 const Login = styled.a`
   background-color: rgba(0, 0, 0, 0.6);
@@ -109,13 +177,14 @@ const Input = styled.input`
   padding: 5px;
   border: none;
 `;
+
 const NavWrapper = styled.nav`
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 70px;
-  background-color: #090b13;
+  background-color: ${(props) => (props.show ? '#090b13' : 'transparent')};
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -130,7 +199,8 @@ const Logo = styled.a`
   margin-top: 4px;
   max-height: 70px;
   font-size: 0;
-  display: inline-block;
+  diplay: inline-block;
+
   img {
     display: block;
     width: 100%;
