@@ -35,7 +35,7 @@ const Row = ({ title, id, fetchUrl }) => {
       <h2>{title}</h2>
       <Swiper
         modules={[Navigation, Pagination, Scrollbar, A11y]}
-        loop={true}
+        loop={movies.length > 0}
         navigation
         pagination={{ clickable: true }}
         breakpoints={{
